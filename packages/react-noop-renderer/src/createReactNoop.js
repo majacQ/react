@@ -14,26 +14,28 @@
  * environment.
  */
 
-import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
-import type {ReactNodeList} from 'shared/ReactTypes';
-import type {RootTag} from 'shared/ReactRootTags';
+import type {ReactNodeList, Thenable} from 'shared/ReactTypes';
+import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
-import {createPortal} from 'shared/ReactPortal';
-import expect from 'expect';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import enqueueTask from 'shared/enqueueTask';
+import {
+  ConcurrentRoot,
+  BlockingRoot,
+  LegacyRoot,
+} from 'react-reconciler/src/ReactRootTags';
+
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import warningWithoutStack from 'shared/warningWithoutStack';
-import {warnAboutMissingMockScheduler} from 'shared/ReactFeatureFlags';
-import {ConcurrentRoot, BatchedRoot, LegacyRoot} from 'shared/ReactRootTags';
+import enqueueTask from 'shared/enqueueTask';
+const {IsSomeRendererActing} = ReactSharedInternals;
 
 type Container = {
   rootID: string,
   children: Array<Instance | TextInstance>,
   pendingChildren: Array<Instance | TextInstance>,
+  ...
 };
 type Props = {
   prop: any,
@@ -43,6 +45,7 @@ type Props = {
   left?: null | number,
   right?: null | number,
   top?: null | number,
+  ...
 };
 type Instance = {|
   type: string,
@@ -60,8 +63,6 @@ type TextInstance = {|
   context: HostContext,
 |};
 type HostContext = Object;
-
-const {IsSomeRendererActing} = ReactSharedInternals;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -158,6 +159,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     insertInContainerOrInstanceBefore(parentInstance, child, beforeChild);
   }
 
+  function clearContainer(container: Container): void {
+    container.children.splice(0);
+  }
+
   function removeChildFromContainerOrInstance(
     parentInstance: Container | Instance,
     child: Instance | TextInstance,
@@ -213,7 +218,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         ? computeText((newProps.children: any) + '', instance.context)
         : null,
       prop: newProps.prop,
-      hidden: newProps.hidden === true,
+      hidden: !!newProps.hidden,
       context: instance.context,
     };
     Object.defineProperty(clone, 'id', {
@@ -270,6 +275,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       props: Props,
       rootContainerInstance: Container,
       hostContext: HostContext,
+      internalInstanceHandle: Object,
     ): Instance {
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
@@ -282,7 +288,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           ? computeText((props.children: any) + '', hostContext)
           : null,
         prop: props.prop,
-        hidden: props.hidden === true,
+        hidden: !!props.hidden,
         context: hostContext,
       };
       // Hide from unit tests
@@ -293,6 +299,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       });
       Object.defineProperty(inst, 'context', {
         value: inst.context,
+        enumerable: false,
+      });
+      Object.defineProperty(inst, 'fiber', {
+        value: internalInstanceHandle,
         enumerable: false,
       });
       return inst;
@@ -318,7 +328,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       type: string,
       oldProps: Props,
       newProps: Props,
-    ): null | {} {
+    ): null | {...} {
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
       }
@@ -333,10 +343,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     shouldSetTextContent,
-
-    shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-      return !!props.hidden;
-    },
 
     createTextInstance(
       text: string,
@@ -366,7 +372,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     cancelTimeout: clearTimeout,
     noTimeout: -1,
 
-    prepareForCommit(): void {},
+    prepareForCommit(): null | Object {
+      return null;
+    },
 
     resetAfterCommit(): void {},
 
@@ -375,14 +383,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     isPrimaryRenderer: true,
     warnsIfNotActing: true,
     supportsHydration: false,
-
-    mountResponderInstance(): void {
-      // NO-OP
-    },
-
-    unmountResponderInstance(): void {
-      // NO-OP
-    },
 
     getFundamentalComponentInstance(fundamentalInstance): Instance {
       const {impl, props, state} = fundamentalInstance;
@@ -434,6 +434,28 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         hidden: instance.hidden,
       };
     },
+
+    getInstanceFromNode() {
+      throw new Error('Not yet implemented.');
+    },
+
+    beforeActiveInstanceBlur() {
+      // NO-OP
+    },
+
+    afterActiveInstanceBlur() {
+      // NO-OP
+    },
+
+    preparePortalMount() {
+      // NO-OP
+    },
+
+    prepareScopeUpdate() {},
+
+    getInstanceFromScope() {
+      throw new Error('Not yet implemented.');
+    },
   };
 
   const hostConfig = useMutation
@@ -459,7 +481,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           }
           hostUpdateCounter++;
           instance.prop = newProps.prop;
-          instance.hidden = newProps.hidden === true;
+          instance.hidden = !!newProps.hidden;
           if (shouldSetTextContent(type, newProps)) {
             instance.text = computeText(
               (newProps.children: any) + '',
@@ -483,6 +505,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         insertInContainerBefore,
         removeChild,
         removeChildFromContainer,
+        clearContainer,
 
         hideInstance(instance: Instance): void {
           instance.hidden = true;
@@ -512,6 +535,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         supportsPersistence: true,
 
         cloneInstance,
+        clearContainer,
 
         createContainerChildSet(
           container: Container,
@@ -531,6 +555,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           newChildren: Array<Instance | TextInstance>,
         ): void {
           container.pendingChildren = newChildren;
+          if (
+            newChildren.length === 1 &&
+            newChildren[0].text === 'Error when completing root'
+          ) {
+            // Trigger an error for testing purposes
+            throw Error('Error when completing root');
+          }
         },
 
         replaceContainerChildren(
@@ -589,205 +620,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const rootContainers = new Map();
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
-
-  const {
-    flushPassiveEffects,
-    batchedUpdates,
-    IsThisRendererActing,
-  } = NoopRenderer;
-
-  // this act() implementation should be exactly the same in
-  // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
-
-  let hasWarnedAboutMissingMockScheduler = false;
-  const isSchedulerMocked =
-    typeof Scheduler.unstable_flushAllWithoutAsserting === 'function';
-  const flushWork =
-    Scheduler.unstable_flushAllWithoutAsserting ||
-    function() {
-      if (warnAboutMissingMockScheduler === true) {
-        if (hasWarnedAboutMissingMockScheduler === false) {
-          warningWithoutStack(
-            null,
-            'Starting from React v17, the "scheduler" module will need to be mocked ' +
-              'to guarantee consistent behaviour across tests and browsers. To fix this, add the following ' +
-              "to the top of your tests, or in your framework's global config file -\n\n" +
-              'As an example, for jest - \n' +
-              "jest.mock('scheduler', () => require.requireActual('scheduler/unstable_mock'));\n\n" +
-              'For more info, visit https://fb.me/react-mock-scheduler',
-          );
-          hasWarnedAboutMissingMockScheduler = true;
-        }
-      }
-
-      let didFlushWork = false;
-      while (flushPassiveEffects()) {
-        didFlushWork = true;
-      }
-
-      return didFlushWork;
-    };
-
-  function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
-    try {
-      flushWork();
-      enqueueTask(() => {
-        if (flushWork()) {
-          flushWorkAndMicroTasks(onDone);
-        } else {
-          onDone();
-        }
-      });
-    } catch (err) {
-      onDone(err);
-    }
-  }
-
-  // we track the 'depth' of the act() calls with this counter,
-  // so we can tell if any async act() calls try to run in parallel.
-
-  let actingUpdatesScopeDepth = 0;
-
-  function act(callback: () => Thenable) {
-    let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-    let previousIsSomeRendererActing;
-    let previousIsThisRendererActing;
-    actingUpdatesScopeDepth++;
-
-    previousIsSomeRendererActing = IsSomeRendererActing.current;
-    previousIsThisRendererActing = IsThisRendererActing.current;
-    IsSomeRendererActing.current = true;
-    IsThisRendererActing.current = true;
-
-    function onDone() {
-      actingUpdatesScopeDepth--;
-      IsSomeRendererActing.current = previousIsSomeRendererActing;
-      IsThisRendererActing.current = previousIsThisRendererActing;
-      if (__DEV__) {
-        if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
-          // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-          warningWithoutStack(
-            null,
-            'You seem to have overlapping act() calls, this is not supported. ' +
-              'Be sure to await previous act() calls before making a new one. ',
-          );
-        }
-      }
-    }
-
-    let result;
-    try {
-      result = batchedUpdates(callback);
-    } catch (error) {
-      // on sync errors, we still want to 'cleanup' and decrement actingUpdatesScopeDepth
-      onDone();
-      throw error;
-    }
-
-    if (
-      result !== null &&
-      typeof result === 'object' &&
-      typeof result.then === 'function'
-    ) {
-      // setup a boolean that gets set to true only
-      // once this act() call is await-ed
-      let called = false;
-      if (__DEV__) {
-        if (typeof Promise !== 'undefined') {
-          //eslint-disable-next-line no-undef
-          Promise.resolve()
-            .then(() => {})
-            .then(() => {
-              if (called === false) {
-                warningWithoutStack(
-                  null,
-                  'You called act(async () => ...) without await. ' +
-                    'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                    'calls and mixing their scopes. You should - await act(async () => ...);',
-                );
-              }
-            });
-        }
-      }
-
-      // in the async case, the returned thenable runs the callback, flushes
-      // effects and  microtasks in a loop until flushPassiveEffects() === false,
-      // and cleans up
-      return {
-        then(resolve: () => void, reject: (?Error) => void) {
-          called = true;
-          result.then(
-            () => {
-              if (
-                actingUpdatesScopeDepth > 1 ||
-                (isSchedulerMocked === true &&
-                  previousIsSomeRendererActing === true)
-              ) {
-                onDone();
-                resolve();
-                return;
-              }
-              // we're about to exit the act() scope,
-              // now's the time to flush tasks/effects
-              flushWorkAndMicroTasks((err: ?Error) => {
-                onDone();
-                if (err) {
-                  reject(err);
-                } else {
-                  resolve();
-                }
-              });
-            },
-            err => {
-              onDone();
-              reject(err);
-            },
-          );
-        },
-      };
-    } else {
-      if (__DEV__) {
-        warningWithoutStack(
-          result === undefined,
-          'The callback passed to act(...) function ' +
-            'must return undefined, or a Promise. You returned %s',
-          result,
-        );
-      }
-
-      // flush effects until none remain, and cleanup
-      try {
-        if (
-          actingUpdatesScopeDepth === 1 &&
-          (isSchedulerMocked === false ||
-            previousIsSomeRendererActing === false)
-        ) {
-          // we're about to exit the act() scope,
-          // now's the time to flush effects
-          flushWork();
-        }
-        onDone();
-      } catch (err) {
-        onDone();
-        throw err;
-      }
-
-      // in the sync case, the returned thenable only warns *if* await-ed
-      return {
-        then(resolve: () => void) {
-          if (__DEV__) {
-            warningWithoutStack(
-              false,
-              'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-            );
-          }
-          resolve();
-        },
-      };
-    }
-  }
-
-  // end act() implementation
 
   function childToJSX(child, text) {
     if (text !== null) {
@@ -916,7 +748,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (!root) {
         const container = {rootID: rootID, pendingChildren: [], children: []};
         rootContainers.set(rootID, container);
-        root = NoopRenderer.createContainer(container, tag, false);
+        root = NoopRenderer.createContainer(container, tag, false, null);
         roots.set(rootID, root);
       }
       return root.current.stateNode.containerInfo;
@@ -933,6 +765,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         container,
         ConcurrentRoot,
         false,
+        null,
       );
       return {
         _Scheduler: Scheduler,
@@ -948,7 +781,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
     },
 
-    createSyncRoot() {
+    createBlockingRoot() {
       const container = {
         rootID: '' + idCounter++,
         pendingChildren: [],
@@ -956,8 +789,35 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
       const fiberRoot = NoopRenderer.createContainer(
         container,
-        BatchedRoot,
+        BlockingRoot,
         false,
+        null,
+      );
+      return {
+        _Scheduler: Scheduler,
+        render(children: ReactNodeList) {
+          NoopRenderer.updateContainer(children, fiberRoot, null, null);
+        },
+        getChildren() {
+          return getChildren(container);
+        },
+        getChildrenAsJSX() {
+          return getChildrenAsJSX(container);
+        },
+      };
+    },
+
+    createLegacyRoot() {
+      const container = {
+        rootID: '' + idCounter++,
+        pendingChildren: [],
+        children: [],
+      };
+      const fiberRoot = NoopRenderer.createContainer(
+        container,
+        LegacyRoot,
+        false,
+        null,
       );
       return {
         _Scheduler: Scheduler,
@@ -988,7 +848,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       container: Container,
       key: ?string = null,
     ) {
-      return createPortal(children, container, null, key);
+      return NoopRenderer.createPortal(children, container, null, key);
     },
 
     // Shortcut for testing a single root
@@ -1089,6 +949,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return Scheduler.unstable_flushExpired();
     },
 
+    unstable_runWithPriority: NoopRenderer.runWithPriority,
+
     batchedUpdates: NoopRenderer.batchedUpdates,
 
     deferredUpdates: NoopRenderer.deferredUpdates,
@@ -1105,18 +967,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     flushPassiveEffects: NoopRenderer.flushPassiveEffects,
 
-    act,
+    act: noopAct,
 
     // Logs the current state of the tree.
     dumpTree(rootID: string = DEFAULT_ROOT_ID) {
       const root = roots.get(rootID);
       const rootContainer = rootContainers.get(rootID);
       if (!root || !rootContainer) {
+        // eslint-disable-next-line react-internal/no-production-logging
         console.log('Nothing rendered yet.');
         return;
       }
 
-      let bufferedLog = [];
+      const bufferedLog = [];
       function log(...args) {
         bufferedLog.push(...args, '\n');
       }
@@ -1145,20 +1008,29 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
       function logUpdateQueue(updateQueue: UpdateQueue<mixed>, depth) {
         log('  '.repeat(depth + 1) + 'QUEUED UPDATES');
-        const firstUpdate = updateQueue.firstUpdate;
-        if (!firstUpdate) {
-          return;
+        const first = updateQueue.firstBaseUpdate;
+        const update = first;
+        if (update !== null) {
+          do {
+            log(
+              '  '.repeat(depth + 1) + '~',
+              '[' + update.expirationTime + ']',
+            );
+          } while (update !== null);
         }
 
-        log(
-          '  '.repeat(depth + 1) + '~',
-          '[' + firstUpdate.expirationTime + ']',
-        );
-        while (firstUpdate.next) {
-          log(
-            '  '.repeat(depth + 1) + '~',
-            '[' + firstUpdate.expirationTime + ']',
-          );
+        const lastPending = updateQueue.shared.pending;
+        if (lastPending !== null) {
+          const firstPending = lastPending.next;
+          const pendingUpdate = firstPending;
+          if (pendingUpdate !== null) {
+            do {
+              log(
+                '  '.repeat(depth + 1) + '~',
+                '[' + pendingUpdate.expirationTime + ']',
+              );
+            } while (pendingUpdate !== null && pendingUpdate !== firstPending);
+          }
         }
       }
 
@@ -1201,38 +1073,129 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       log('FIBERS:');
       logFiber(root.current, 0);
 
+      // eslint-disable-next-line react-internal/no-production-logging
       console.log(...bufferedLog);
-    },
-
-    flushWithoutCommitting(
-      expectedFlush: Array<mixed>,
-      rootID: string = DEFAULT_ROOT_ID,
-    ) {
-      const root: any = roots.get(rootID);
-      const expiration = NoopRenderer.computeUniqueAsyncExpiration();
-      const batch = {
-        _defer: true,
-        _expirationTime: expiration,
-        _onComplete: () => {
-          root.firstBatch = null;
-        },
-        _next: null,
-      };
-      root.firstBatch = batch;
-      Scheduler.unstable_flushAllWithoutAsserting();
-      const actual = Scheduler.unstable_clearYields();
-      expect(actual).toEqual(expectedFlush);
-      return (expectedCommit: Array<mixed>) => {
-        batch._defer = false;
-        NoopRenderer.flushRoot(root, expiration);
-        expect(Scheduler.unstable_clearYields()).toEqual(expectedCommit);
-      };
     },
 
     getRoot(rootID: string = DEFAULT_ROOT_ID) {
       return roots.get(rootID);
     },
   };
+
+  // This version of `act` is only used by our tests. Unlike the public version
+  // of `act`, it's designed to work identically in both production and
+  // development. It may have slightly different behavior from the public
+  // version, too, since our constraints in our test suite are not the same as
+  // those of developers using React — we're testing React itself, as opposed to
+  // building an app with React.
+
+  const {batchedUpdates, IsThisRendererActing} = NoopRenderer;
+  let actingUpdatesScopeDepth = 0;
+
+  function noopAct(scope: () => Thenable<mixed> | void) {
+    if (Scheduler.unstable_flushAllWithoutAsserting === undefined) {
+      throw Error(
+        'This version of `act` requires a special mock build of Scheduler.',
+      );
+    }
+    if (setTimeout._isMockFunction !== true) {
+      throw Error(
+        "This version of `act` requires Jest's timer mocks " +
+          '(i.e. jest.useFakeTimers).',
+      );
+    }
+
+    const previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+    const previousIsSomeRendererActing = IsSomeRendererActing.current;
+    const previousIsThisRendererActing = IsThisRendererActing.current;
+    IsSomeRendererActing.current = true;
+    IsThisRendererActing.current = true;
+    actingUpdatesScopeDepth++;
+
+    const unwind = () => {
+      actingUpdatesScopeDepth--;
+      IsSomeRendererActing.current = previousIsSomeRendererActing;
+      IsThisRendererActing.current = previousIsThisRendererActing;
+
+      if (__DEV__) {
+        if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
+          // if it's _less than_ previousActingUpdatesScopeDepth, then we can
+          // assume the 'other' one has warned
+          console.error(
+            'You seem to have overlapping act() calls, this is not supported. ' +
+              'Be sure to await previous act() calls before making a new one. ',
+          );
+        }
+      }
+    };
+
+    // TODO: This would be way simpler if 1) we required a promise to be
+    // returned and 2) we could use async/await. Since it's only our used in
+    // our test suite, we should be able to.
+    try {
+      const thenable = batchedUpdates(scope);
+      if (
+        typeof thenable === 'object' &&
+        thenable !== null &&
+        typeof thenable.then === 'function'
+      ) {
+        return {
+          then(resolve: () => void, reject: (error: mixed) => void) {
+            thenable.then(
+              () => {
+                flushActWork(
+                  () => {
+                    unwind();
+                    resolve();
+                  },
+                  error => {
+                    unwind();
+                    reject(error);
+                  },
+                );
+              },
+              error => {
+                unwind();
+                reject(error);
+              },
+            );
+          },
+        };
+      } else {
+        try {
+          // TODO: Let's not support non-async scopes at all in our tests. Need to
+          // migrate existing tests.
+          let didFlushWork;
+          do {
+            didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
+          } while (didFlushWork);
+        } finally {
+          unwind();
+        }
+      }
+    } catch (error) {
+      unwind();
+      throw error;
+    }
+  }
+
+  function flushActWork(resolve, reject) {
+    // Flush suspended fallbacks
+    // $FlowFixMe: Flow doesn't know about global Jest object
+    jest.runOnlyPendingTimers();
+    enqueueTask(() => {
+      try {
+        const didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
+        if (didFlushWork) {
+          flushActWork(resolve, reject);
+        } else {
+          resolve();
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
 
   return ReactNoop;
 }
