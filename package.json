@@ -51,7 +51,7 @@
     "optimist": "~0.4.0",
     "phantomjs": ">= 1.9.0",
     "semver": ">= 1.1.4",
-    "uglify-js": "~2.3.6",
+    "uglify-js": "~2.8.29",
     "grunt-contrib-clean": "~0.4.1",
     "grunt-compare-size": "~0.4.0",
     "gzip-js": "~0.3.2",
