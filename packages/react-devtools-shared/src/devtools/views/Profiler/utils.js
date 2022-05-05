@@ -8,6 +8,7 @@
  */
 
 import {PROFILER_EXPORT_VERSION} from 'react-devtools-shared/src/constants';
+import {separateDisplayNameAndHOCs} from 'react-devtools-shared/src/utils';
 
 import type {ProfilingDataBackend} from 'react-devtools-shared/src/backend/types';
 import type {
@@ -75,13 +76,32 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
                 ? new Map(commitDataBackend.changeDescriptions)
                 : null,
             duration: commitDataBackend.duration,
+            effectDuration: commitDataBackend.effectDuration,
             fiberActualDurations: new Map(
               commitDataBackend.fiberActualDurations,
             ),
             fiberSelfDurations: new Map(commitDataBackend.fiberSelfDurations),
             interactionIDs: commitDataBackend.interactionIDs,
+            passiveEffectDuration: commitDataBackend.passiveEffectDuration,
             priorityLevel: commitDataBackend.priorityLevel,
             timestamp: commitDataBackend.timestamp,
+            updaters:
+              commitDataBackend.updaters !== null
+                ? commitDataBackend.updaters.map(serializedElement => {
+                    const [
+                      serializedElementDisplayName,
+                      serializedElementHocDisplayNames,
+                    ] = separateDisplayNameAndHOCs(
+                      serializedElement.displayName,
+                      serializedElement.type,
+                    );
+                    return {
+                      ...serializedElement,
+                      displayName: serializedElementDisplayName,
+                      hocDisplayNames: serializedElementHocDisplayNames,
+                    };
+                  })
+                : null,
           }),
         );
 
@@ -109,7 +129,9 @@ export function prepareProfilingDataFrontendFromExport(
   const {version} = profilingDataExport;
 
   if (version !== PROFILER_EXPORT_VERSION) {
-    throw Error(`Unsupported profiler export version "${version}"`);
+    throw Error(
+      `Unsupported profile export version "${version}". Supported version is "${PROFILER_EXPORT_VERSION}".`,
+    );
   }
 
   const dataForRoots: Map<number, ProfilingDataForRootFrontend> = new Map();
@@ -129,20 +151,26 @@ export function prepareProfilingDataFrontendFromExport(
           ({
             changeDescriptions,
             duration,
+            effectDuration,
             fiberActualDurations,
             fiberSelfDurations,
             interactionIDs,
+            passiveEffectDuration,
             priorityLevel,
             timestamp,
+            updaters,
           }) => ({
             changeDescriptions:
               changeDescriptions != null ? new Map(changeDescriptions) : null,
             duration,
+            effectDuration,
             fiberActualDurations: new Map(fiberActualDurations),
             fiberSelfDurations: new Map(fiberSelfDurations),
             interactionIDs,
+            passiveEffectDuration,
             priorityLevel,
             timestamp,
+            updaters,
           }),
         ),
         displayName,
@@ -180,22 +208,28 @@ export function prepareProfilingDataExport(
           ({
             changeDescriptions,
             duration,
+            effectDuration,
             fiberActualDurations,
             fiberSelfDurations,
             interactionIDs,
+            passiveEffectDuration,
             priorityLevel,
             timestamp,
+            updaters,
           }) => ({
             changeDescriptions:
               changeDescriptions != null
                 ? Array.from(changeDescriptions.entries())
                 : null,
             duration,
+            effectDuration,
             fiberActualDurations: Array.from(fiberActualDurations.entries()),
             fiberSelfDurations: Array.from(fiberSelfDurations.entries()),
             interactionIDs,
+            passiveEffectDuration,
             priorityLevel,
             timestamp,
+            updaters,
           }),
         ),
         displayName,

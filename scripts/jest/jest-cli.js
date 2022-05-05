@@ -44,7 +44,7 @@ const argv = yargs
       describe: 'Run with the given release channel.',
       requiresArg: true,
       type: 'string',
-      default: 'experimental',
+      default: 'www-modern',
       choices: ['experimental', 'stable', 'www-classic', 'www-modern'],
     },
     env: {
@@ -71,7 +71,6 @@ const argv = yargs
       describe: 'Run with www variant set to true.',
       requiresArg: false,
       type: 'boolean',
-      default: false,
     },
     build: {
       alias: 'b',
@@ -92,6 +91,11 @@ const argv = yargs
       requiresArg: false,
       type: 'boolean',
       default: false,
+    },
+    deprecated: {
+      describe: 'Print deprecation message for command.',
+      requiresArg: true,
+      type: 'string',
     },
   }).argv;
 
@@ -156,11 +160,18 @@ function validateOptions() {
     }
   }
 
-  if (argv.variant && !isWWWConfig()) {
-    logError(
-      'Variant is only supported for the www release channels. Update these options to continue.'
-    );
-    success = false;
+  if (isWWWConfig()) {
+    if (argv.variant === undefined) {
+      // Turn internal experiments on by default
+      argv.variant = true;
+    }
+  } else {
+    if (argv.variant) {
+      logError(
+        'Variant is only supported for the www release channels. Update these options to continue.'
+      );
+      success = false;
+    }
   }
 
   if (argv.build && argv.persistent) {
@@ -207,10 +218,10 @@ function validateOptions() {
 
   if (argv.build) {
     // TODO: We could build this if it hasn't been built yet.
-    const buildDir = path.resolve('./build');
+    const buildDir = path.resolve('./build2');
     if (!fs.existsSync(buildDir)) {
       logError(
-        'Build directory does not exist, please run `yarn build` or remove the --build option.'
+        'Build directory does not exist, please run `yarn build-combined` or remove the --build option.'
       );
       success = false;
     } else if (Date.now() - fs.statSync(buildDir).mtimeMs > 1000 * 60 * 15) {
@@ -229,12 +240,12 @@ function validateOptions() {
 function getCommandArgs() {
   // Add the correct Jest config.
   const args = ['./scripts/jest/jest.js', '--config'];
-  if (argv.build) {
+  if (argv.project === 'devtools') {
+    args.push(devToolsConfig);
+  } else if (argv.build) {
     args.push(buildConfig);
   } else if (argv.persistent) {
     args.push(persistentConfig);
-  } else if (argv.project === 'devtools') {
-    args.push(devToolsConfig);
   } else if (isWWWConfig()) {
     args.push(wwwConfig);
   } else if (isOSSConfig()) {
@@ -287,6 +298,10 @@ function getEnvars() {
 }
 
 function main() {
+  if (argv.deprecated) {
+    console.log(chalk.red(`\nPlease run: \`${argv.deprecated}\` instead.\n`));
+    return;
+  }
   validateOptions();
   const args = getCommandArgs();
   const envars = getEnvars();
@@ -317,7 +332,17 @@ function main() {
   }
 
   // Run Jest.
-  spawn('node', args, {stdio: 'inherit', env: {...envars, ...process.env}});
+  const jest = spawn('node', args, {
+    stdio: 'inherit',
+    env: {...envars, ...process.env},
+  });
+  // Ensure we close our process when we get a failure case.
+  jest.on('close', code => {
+    // Forward the exit code from the Jest process.
+    if (code === 1) {
+      process.exit(1);
+    }
+  });
 }
 
 main();
