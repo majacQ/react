@@ -1,10 +1,13 @@
 GEM
   remote: https://rubygems.org/
   specs:
+  <<<<<<< dependabot/bundler/docs/addressable-2.8.0
+  =======
   <<<<<<< snyk-fix-9a42e58b40addeb5431b3c717d1fcee6
     addressable (2.8.0)
   =======
   <<<<<<< snyk-fix-babeedf485fba393019a2d5e5ea8d495
+  >>>>>>> 0.3-stable
     addressable (2.8.0)
       public_suffix (>= 2.0.2, < 5.0)
     colorator (1.1.0)
@@ -114,12 +117,16 @@ GEM
     mercenary (0.3.6)
     pathutil (0.16.2)
       forwardable-extended (~> 2.6)
+  <<<<<<< dependabot/bundler/docs/addressable-2.8.0
+    public_suffix (4.0.7)
+  =======
   <<<<<<< snyk-fix-9a42e58b40addeb5431b3c717d1fcee6
     public_suffix (4.0.7)
     rb-fsevent (0.11.1)
   =======
     public_suffix (4.0.6)
   <<<<<<< snyk-fix-babeedf485fba393019a2d5e5ea8d495
+  >>>>>>> 0.3-stable
     rb-fsevent (0.9.3)
   >>>>>>> 0.3-stable
     rb-inotify (0.10.1)
