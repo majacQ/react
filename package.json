@@ -48,6 +48,10 @@
     "browserify": "~2.36.1",
   >>>>>>> 0.3-stable
     "wrapup": "~0.12.0",
+  <<<<<<< snyk-fix-a20808b05196663649fa64fb3eea9770
+    "grunt-cli": "~1.3.0",
+    "grunt": "~1.0.3",
+  =======
   <<<<<<< snyk-fix-7d41cbf7d7fff1b77b88dcec70e6a5ac
     "grunt-cli": "~1.3.0",
     "grunt": "~1.0.3",
@@ -63,6 +67,7 @@
     "grunt": "~1.3.0",
   =======
     "grunt": "~1.0.3",
+  >>>>>>> 0.3-stable
   >>>>>>> 0.3-stable
   >>>>>>> 0.3-stable
   >>>>>>> 0.3-stable
