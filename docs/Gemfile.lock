@@ -1,7 +1,75 @@
 GEM
   remote: https://rubygems.org/
   specs:
+  <<<<<<< snyk-fix-9a42e58b40addeb5431b3c717d1fcee6
     addressable (2.8.0)
+  =======
+  <<<<<<< snyk-fix-babeedf485fba393019a2d5e5ea8d495
+    addressable (2.8.0)
+      public_suffix (>= 2.0.2, < 5.0)
+    colorator (1.1.0)
+    concurrent-ruby (1.1.10)
+    em-websocket (0.5.3)
+      eventmachine (>= 0.12.9)
+      http_parser.rb (~> 0)
+    eventmachine (1.2.7)
+    ffi (1.15.5)
+    forwardable-extended (2.6.0)
+    http_parser.rb (0.8.0)
+    i18n (0.9.5)
+      concurrent-ruby (~> 1.0)
+    jekyll (3.9.2)
+      addressable (~> 2.4)
+      colorator (~> 1.0)
+      em-websocket (~> 0.5)
+      i18n (~> 0.7)
+      jekyll-sass-converter (~> 1.0)
+      jekyll-watch (~> 2.0)
+      kramdown (>= 1.17, < 3)
+      liquid (~> 4.0)
+      mercenary (~> 0.3.3)
+      pathutil (~> 0.9)
+      rouge (>= 1.7, < 4)
+      safe_yaml (~> 1.0)
+    jekyll-sass-converter (1.3.0)
+      sass (~> 3.2)
+    jekyll-watch (2.2.1)
+      listen (~> 3.0)
+    json (1.8.0)
+    kramdown (2.3.2)
+      rexml
+  =======
+  <<<<<<< dependabot/bundler/docs/json-2.3.0
+    classifier (1.3.3)
+      fast-stemmer (>= 1.0.0)
+    colorator (0.1)
+    commander (4.1.3)
+      highline (~> 1.6.11)
+    directory_watcher (1.4.1)
+    fast-stemmer (1.0.2)
+    highline (1.6.19)
+    jekyll (1.0.2)
+      classifier (~> 1.3)
+      colorator (~> 0.1)
+      commander (~> 4.1.3)
+      directory_watcher (~> 1.4.1)
+      kramdown (~> 1.0.2)
+      liquid (~> 2.3)
+      maruku (~> 0.5)
+      pygments.rb (~> 0.5.0)
+      safe_yaml (~> 0.7.0)
+    json (2.3.0)
+    kramdown (1.0.2)
+    liquid (2.5.0)
+    maruku (0.6.1)
+      syntax (>= 1.0.0)
+    posix-spawn (0.3.6)
+    pygments.rb (0.5.0)
+      posix-spawn (~> 0.3.6)
+      yajl-ruby (~> 1.1.0)
+  =======
+    addressable (2.7.0)
+  >>>>>>> 0.3-stable
       public_suffix (>= 2.0.2, < 5.0)
     colorator (1.1.0)
     concurrent-ruby (1.1.10)
@@ -32,8 +100,13 @@ GEM
     jekyll-watch (2.2.1)
       listen (~> 3.0)
     json (1.8.0)
+  <<<<<<< snyk-fix-9a42e58b40addeb5431b3c717d1fcee6
     kramdown (2.4.0)
       rexml
+  =======
+    kramdown (1.17.0)
+  >>>>>>> 0.3-stable
+  >>>>>>> 0.3-stable
     liquid (4.0.3)
     listen (3.7.1)
       rb-fsevent (~> 0.10, >= 0.10.3)
@@ -41,13 +114,31 @@ GEM
     mercenary (0.3.6)
     pathutil (0.16.2)
       forwardable-extended (~> 2.6)
+  <<<<<<< snyk-fix-9a42e58b40addeb5431b3c717d1fcee6
     public_suffix (4.0.7)
     rb-fsevent (0.11.1)
+  =======
+    public_suffix (4.0.6)
+  <<<<<<< snyk-fix-babeedf485fba393019a2d5e5ea8d495
+    rb-fsevent (0.9.3)
+  >>>>>>> 0.3-stable
     rb-inotify (0.10.1)
       ffi (~> 1.0)
     redcarpet (2.2.2)
     rexml (3.2.5)
     rouge (3.28.0)
+  <<<<<<< snyk-fix-9a42e58b40addeb5431b3c717d1fcee6
+  =======
+  =======
+  >>>>>>> 0.3-stable
+    rb-fsevent (0.9.3)
+    rb-inotify (0.10.1)
+      ffi (~> 1.0)
+    redcarpet (3.5.1)
+    rouge (2.2.1)
+  >>>>>>> 0.3-stable
+    ruby_dep (1.5.0)
+  >>>>>>> 0.3-stable
     safe_yaml (1.0.5)
     sass (3.7.4)
       sass-listen (~> 4.0.0)
@@ -59,7 +150,15 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  <<<<<<< snyk-fix-9a42e58b40addeb5431b3c717d1fcee6
   jekyll (~> 3.9, >= 3.9.0)
+  =======
+  <<<<<<< snyk-fix-babeedf485fba393019a2d5e5ea8d495
+  jekyll (~> 3.0, >= 3.0.0)
+  =======
+  jekyll (~> 3.6)
+  >>>>>>> 0.3-stable
+  >>>>>>> 0.3-stable
   json
   rb-fsevent
   redcarpet
@@ -67,3 +166,7 @@ DEPENDENCIES
 
 BUNDLED WITH
    2.1.4
+  <<<<<<< snyk-fix-9a42e58b40addeb5431b3c717d1fcee6
+  =======
+ 
+  >>>>>>> 0.3-stable
