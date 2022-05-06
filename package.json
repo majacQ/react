@@ -42,10 +42,14 @@
     "source-map": "~0.1.22"
   },
   "devDependencies": {
+  <<<<<<< snyk-fix-0d9ac3d5c5fe94327fbe73ab473d9b37
+    "browserify": "~9.0.0",
+  =======
   <<<<<<< snyk-fix-8cd7483d373a772f1c6dc654383c9b99
     "browserify": "~9.0.0",
   =======
     "browserify": "~2.36.1",
+  >>>>>>> 0.3-stable
   >>>>>>> 0.3-stable
     "wrapup": "~0.12.0",
   <<<<<<< snyk-fix-a20808b05196663649fa64fb3eea9770
