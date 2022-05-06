@@ -36,22 +36,26 @@
   },
   "dependencies": {
     "base62": "~0.1.1",
-    "commoner": "~0.7.0",
+    "commoner": "~0.10.8",
     "esprima": "https://github.com/facebook/esprima/tarball/ca28795124d45968e62a7b4b336d23a053ac3a84",
-    "recast": "~0.4.8",
+    "recast": "~0.20.4",
     "source-map": "~0.1.22"
   },
   "devDependencies": {
-    "browserify": "~2.14.2",
+    "browserify": "~2.36.1",
     "wrapup": "~0.12.0",
     "grunt-cli": "~0.1.9",
+  <<<<<<< snyk-fix-8995e9e7324d1f1eb91839d08fec504d
     "grunt": "~1.3.0",
+  =======
+    "grunt": "~1.0.3",
+  >>>>>>> 0.3-stable
     "grunt-contrib-copy": "~0.4.1",
     "grunt-contrib-jshint": "~0.5.4",
     "optimist": "~0.4.0",
     "phantomjs": ">= 1.9.0",
     "semver": ">= 1.1.4",
-    "uglify-js": "~2.3.6",
+    "uglify-js": "~2.8.29",
     "grunt-contrib-clean": "~0.4.1",
     "grunt-compare-size": "~0.4.0",
     "gzip-js": "~0.3.2",
