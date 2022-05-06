@@ -42,7 +42,7 @@
     "source-map": "~0.1.22"
   },
   "devDependencies": {
-    "browserify": "~2.36.1",
+    "browserify": "~9.0.0",
     "wrapup": "~0.12.0",
     "grunt-cli": "~0.1.9",
     "grunt": "~1.0.3",
