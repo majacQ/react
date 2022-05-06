@@ -1,10 +1,14 @@
 source 'https://rubygems.org'
 
 # jekyll, which builds it all
+  <<<<<<< snyk-fix-9a42e58b40addeb5431b3c717d1fcee6
+gem 'jekyll', '~> 3.9', '>= 3.9.0'
+  =======
   <<<<<<< snyk-fix-babeedf485fba393019a2d5e5ea8d495
 gem 'jekyll', '~> 3.0', '>= 3.0.0'
   =======
 gem 'jekyll', '~>3.6'
+  >>>>>>> 0.3-stable
   >>>>>>> 0.3-stable
 
 # JSON
@@ -18,4 +22,4 @@ gem 'rb-fsevent'
 
 # Redcarpet for Markdown
 gem 'redcarpet'
- 
+  
